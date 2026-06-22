@@ -195,6 +195,7 @@ svg {
 
 .result-bar {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   padding: 14px;
   border-top: 1px solid var(--line);
@@ -219,9 +220,14 @@ svg {
 }
 
 .primary-button {
-  flex: 1;
+  flex: 1 1 180px;
   background: var(--accent);
   color: #ffffff;
+}
+
+.secondary-button,
+.ghost-button {
+  flex: 0 1 auto;
 }
 
 .primary-button:hover {

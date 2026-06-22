@@ -59,6 +59,8 @@ let originalMetadata = {};
 let resultBlob = null;
 let resultFile = null;
 let resultUrl = "";
+let resultBytes = null;
+const SAVE_SHORTCUT_NAME = "照片元数据网页保存";
 
 function makeAppleCameraTemplate(cameraModel, focalLengthMm, aperture, lensLabel = "主相机") {
   const apertureText = rationalToDecimalText(aperture);
@@ -118,6 +120,26 @@ function concatBytes(...arrays) {
     offset += item.length;
   }
   return output;
+}
+
+function bytesToBase64(bytes) {
+  const chunkSize = 0x8000;
+  let binary = "";
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(...bytes.slice(index, index + chunkSize));
+  }
+  return btoa(binary);
+}
+
+function base64ToBytes(value) {
+  const compact = String(value || "").replace(/\s+/g, "");
+  if (!compact) throw new Error("剪贴板里没有图片 Base64。");
+  const binary = atob(compact);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes;
 }
 
 function asciiBytes(value) {
@@ -701,6 +723,7 @@ async function handleFile(file) {
   sourceFile = file;
   resultBlob = null;
   resultFile = null;
+  resultBytes = null;
   if (resultUrl) URL.revokeObjectURL(resultUrl);
   resultUrl = "";
 
@@ -717,9 +740,50 @@ async function handleFile(file) {
   displayRows();
   document.querySelector("#generateButton").disabled = false;
   document.querySelector("#shareButton").disabled = true;
+  document.querySelector("#shortcutSaveButton").disabled = true;
   document.querySelector("#downloadLink").classList.add("disabled");
   document.querySelector("#resultBadge").textContent = "待生成";
   setStatus("图片已就绪。", "ok");
+}
+
+async function handleShortcutClipboardInput() {
+  if (!navigator.clipboard?.readText) {
+    setStatus("当前浏览器不能读取剪贴板。请用 HTTPS Safari 打开网页。", "warn");
+    return;
+  }
+
+  try {
+    setStatus("正在读取快捷指令放入剪贴板的图片。");
+    const clipboardText = await navigator.clipboard.readText();
+    const bytes = base64ToBytes(clipboardText);
+    if (bytes[0] !== 0xff || bytes[1] !== 0xd8) {
+      throw new Error("剪贴板 Base64 不是 JPEG。请先运行“照片元数据网页入口”。");
+    }
+
+    sourceFile = new File([bytes], "shortcut-input.jpg", { type: "image/jpeg" });
+    sourceJpegBytes = bytes;
+    originalMetadata = extractPhotoMetadata(bytes);
+    resultBlob = null;
+    resultFile = null;
+    resultBytes = null;
+    if (resultUrl) URL.revokeObjectURL(resultUrl);
+    resultUrl = URL.createObjectURL(new Blob([bytes], { type: "image/jpeg" }));
+
+    document.querySelector("#previewImage").hidden = false;
+    document.querySelector("#emptyPreview").hidden = true;
+    document.querySelector("#previewImage").src = resultUrl;
+    document.querySelector("#fileName").textContent = "来自快捷指令的照片";
+    document.querySelector("#fileMeta").textContent = `${(bytes.length / 1024 / 1024).toFixed(2)} MB · JPEG`;
+    document.querySelector("#generateButton").disabled = false;
+    document.querySelector("#shareButton").disabled = true;
+    document.querySelector("#shortcutSaveButton").disabled = true;
+    document.querySelector("#downloadLink").classList.add("disabled");
+    document.querySelector("#resultBadge").textContent = "待生成";
+    displayRows();
+    setStatus("已读取快捷指令图片。现在选择模板并生成照片。", "ok");
+  } catch (error) {
+    setStatus(error.message || String(error), "error");
+  }
 }
 
 function renderTemplateOptions() {
@@ -745,6 +809,7 @@ async function generatePhoto() {
 
     resultBlob = new Blob([outputBytes], { type: "image/jpeg" });
     resultFile = new File([resultBlob], filename, { type: "image/jpeg" });
+    resultBytes = outputBytes;
     if (resultUrl) URL.revokeObjectURL(resultUrl);
     resultUrl = URL.createObjectURL(resultBlob);
 
@@ -754,14 +819,31 @@ async function generatePhoto() {
     downloadLink.download = filename;
     downloadLink.classList.remove("disabled");
     document.querySelector("#shareButton").disabled = false;
+    document.querySelector("#shortcutSaveButton").disabled = false;
     document.querySelector("#resultBadge").textContent = filename;
     displayRows({
       ...metadata,
       gpsText: document.querySelector("#gpsInput").value,
     });
-    setStatus("已生成带新 EXIF 的 JPEG。iPhone 上优先用“分享保存”。", "ok");
+    setStatus("已生成带新 EXIF 的 JPEG。若要避免 Safari 来源，请用“快捷指令保存”。", "ok");
   } catch (error) {
     setStatus(error.message || String(error), "error");
+  }
+}
+
+async function saveWithShortcut() {
+  if (!resultBytes) return;
+  if (!navigator.clipboard?.writeText) {
+    setStatus("当前浏览器不能写入剪贴板。请用 HTTPS Safari 打开网页。", "warn");
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(bytesToBase64(resultBytes));
+    setStatus("生成结果已放入剪贴板，正在启动保存快捷指令。", "ok");
+    window.location.href = `shortcuts://run-shortcut?name=${encodeURIComponent(SAVE_SHORTCUT_NAME)}`;
+  } catch (error) {
+    setStatus(error.message || "无法写入剪贴板，请改用分享保存。", "error");
   }
 }
 
@@ -802,6 +884,7 @@ function resetApp() {
   originalMetadata = {};
   resultBlob = null;
   resultFile = null;
+  resultBytes = null;
   if (resultUrl) URL.revokeObjectURL(resultUrl);
   resultUrl = "";
   document.querySelector("#fileInput").value = "";
@@ -812,6 +895,7 @@ function resetApp() {
   document.querySelector("#fileMeta").textContent = "JPEG 会直接写入 EXIF；其他格式会先在浏览器中转成 JPEG。";
   document.querySelector("#generateButton").disabled = true;
   document.querySelector("#shareButton").disabled = true;
+  document.querySelector("#shortcutSaveButton").disabled = true;
   document.querySelector("#downloadLink").classList.add("disabled");
   document.querySelector("#resultBadge").textContent = "未生成";
   displayRows();
@@ -822,13 +906,18 @@ function initApp() {
   renderTemplateOptions();
   document.querySelector("#captureTimeInput").value = datetimeLocalValue();
   displayRows();
+  if (new URLSearchParams(window.location.search).get("shortcut") === "input") {
+    setStatus("已从入口快捷指令打开。请点“读快捷指令”读取刚选择的照片。", "ok");
+  }
 
   const fileInput = document.querySelector("#fileInput");
   const dropZone = document.querySelector("#dropZone");
 
   fileInput.addEventListener("change", () => handleFile(fileInput.files?.[0]).catch((error) => setStatus(error.message, "error")));
   document.querySelector("#modelSelect").addEventListener("change", updateTemplateDetails);
+  document.querySelector("#clipboardImportButton").addEventListener("click", handleShortcutClipboardInput);
   document.querySelector("#generateButton").addEventListener("click", generatePhoto);
+  document.querySelector("#shortcutSaveButton").addEventListener("click", saveWithShortcut);
   document.querySelector("#shareButton").addEventListener("click", () => shareResult().catch((error) => setStatus(error.message, "error")));
   document.querySelector("#locationButton").addEventListener("click", useCurrentLocation);
   document.querySelector("#resetButton").addEventListener("click", resetApp);

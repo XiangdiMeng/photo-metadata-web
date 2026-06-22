@@ -21,6 +21,19 @@ https://xiangdimeng.github.io/photo-metadata-web/
 
 在 iPhone Safari 打开这个地址后，生成图片，再点“分享保存”。如果系统弹出分享面板，选择“存储图像”或保存到“照片”即可。
 
+如果不想照片信息里出现“从 Safari 浏览器保存”，请使用配套桥接快捷指令：
+
+导入链接：
+
+- [`照片元数据网页入口.shortcut`](https://xiangdimeng.github.io/photo-metadata-web/shortcuts/%E7%85%A7%E7%89%87%E5%85%83%E6%95%B0%E6%8D%AE%E7%BD%91%E9%A1%B5%E5%85%A5%E5%8F%A3.shortcut)
+- [`照片元数据网页保存.shortcut`](https://xiangdimeng.github.io/photo-metadata-web/shortcuts/%E7%85%A7%E7%89%87%E5%85%83%E6%95%B0%E6%8D%AE%E7%BD%91%E9%A1%B5%E4%BF%9D%E5%AD%98.shortcut)
+
+1. 运行 `照片元数据网页入口`，选择照片。
+2. 网页打开后点 `读快捷指令`。
+3. 选择手机型号并点 `生成照片`。
+4. 点 `快捷指令保存`。
+5. iOS 会跳转到 `照片元数据网页保存`，由快捷指令把结果保存到照片。
+
 直接打开 `index.html` 可以使用。为了测试 iPhone 上的分享能力，建议通过本地服务器访问：
 
 ```sh
