@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>照片元数据网页写入器</title>
+    <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="6" fill="%231d6f61"/><path d="M9 11h3l1.3-2h5.4L20 11h3a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3v-7a3 3 0 0 1 3-3z" fill="white"/><circle cx="16" cy="17.5" r="4" fill="%231d6f61"/></svg>' />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>照片元数据网页写入器</h1>
+        <p>上传图片，选择 iPhone 模板，浏览器本地生成带新 EXIF 的 JPEG。</p>
+      </div>
+      <div class="topbar-actions">
+        <button id="resetButton" class="ghost-button" type="button" title="重置">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7v6h6M5.5 17a8 8 0 1 0 .5-10" /></svg>
+          重置
+        </button>
+      </div>
+    </header>
+
+    <main class="app-shell">
+      <section class="media-panel">
+        <div id="dropZone" class="drop-zone">
+          <input id="fileInput" type="file" accept="image/*" />
+          <div id="emptyPreview" class="empty-preview" aria-hidden="true">
+            <svg viewBox="0 0 240 180" role="img">
+              <rect x="34" y="28" width="172" height="124" rx="8" />
+              <path d="M58 126l38-38 30 30 18-18 38 38" />
+              <circle cx="156" cy="62" r="13" />
+              <path d="M78 164h84" />
+            </svg>
+          </div>
+          <img id="previewImage" alt="上传图片预览" hidden />
+          <div class="drop-copy">
+            <strong id="fileName">选择或拖入一张图片</strong>
+            <span id="fileMeta">JPEG 会直接写入 EXIF；其他格式会先在浏览器中转成 JPEG。</span>
+          </div>
+        </div>
+
+        <div class="result-bar">
+          <button id="generateButton" class="primary-button" type="button" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8Z" /></svg>
+            生成照片
+          </button>
+          <button id="shareButton" class="secondary-button" type="button" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0 4 4m-4-4-4 4M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" /></svg>
+            分享保存
+          </button>
+          <a id="downloadLink" class="secondary-button disabled" download="photo-metadata-web.jpg" href="#">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" /></svg>
+            下载 JPEG
+          </a>
+        </div>
+
+        <div class="status-line" id="statusLine">等待图片。</div>
+      </section>
+
+      <section class="controls-panel">
+        <div class="panel-heading">
+          <h2>设备模板</h2>
+          <span id="templateCount"></span>
+        </div>
+
+        <label class="field">
+          <span>手机型号</span>
+          <select id="modelSelect"></select>
+        </label>
+
+        <div class="field-grid">
+          <label class="field">
+            <span>拍摄时间</span>
+            <input id="captureTimeInput" type="datetime-local" />
+          </label>
+          <label class="field">
+            <span>GPS</span>
+            <input id="gpsInput" inputmode="decimal" value="31.2304,121.4737" />
+          </label>
+        </div>
+
+        <div class="switch-row">
+          <label class="switch">
+            <input id="useNowSwitch" type="checkbox" checked />
+            <span>生成时使用当前时间</span>
+          </label>
+          <button id="locationButton" class="ghost-button compact" type="button" title="读取当前位置">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-5.3 7-12a7 7 0 0 0-14 0c0 6.7 7 12 7 12Z" /><circle cx="12" cy="9" r="2.5" /></svg>
+            当前位置
+          </button>
+        </div>
+
+        <details class="advanced">
+          <summary>模板数值</summary>
+          <div id="templateDetails" class="detail-grid"></div>
+        </details>
+
+        <div class="metadata-table-wrap">
+          <div class="panel-heading">
+            <h2>元数据对比</h2>
+            <span id="resultBadge">未生成</span>
+          </div>
+          <table class="metadata-table">
+            <thead>
+              <tr>
+                <th>字段</th>
+                <th>原图</th>
+                <th>新图</th>
+              </tr>
+            </thead>
+            <tbody id="metadataRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
