@@ -13,6 +13,14 @@
 
 ## 使用
 
+线上 HTTPS 地址：
+
+```text
+https://xiangdimeng.github.io/photo-metadata-web/
+```
+
+在 iPhone Safari 打开这个地址后，生成图片，再点“分享保存”。如果系统弹出分享面板，选择“存储图像”或保存到“照片”即可。
+
 直接打开 `index.html` 可以使用。为了测试 iPhone 上的分享能力，建议通过本地服务器访问：
 
 ```sh
