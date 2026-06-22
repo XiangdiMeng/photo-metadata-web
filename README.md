@@ -25,8 +25,8 @@ https://xiangdimeng.github.io/photo-metadata-web/
 
 导入链接：
 
-- [`照片元数据网页入口.shortcut`](https://xiangdimeng.github.io/photo-metadata-web/shortcuts/entry.shortcut)
-- [`照片元数据网页保存.shortcut`](https://xiangdimeng.github.io/photo-metadata-web/shortcuts/save.shortcut)
+- [`照片元数据网页入口.shortcut`](https://raw.githubusercontent.com/XiangdiMeng/photo-metadata-web/main/shortcuts/entry.shortcut)
+- [`照片元数据网页保存.shortcut`](https://raw.githubusercontent.com/XiangdiMeng/photo-metadata-web/main/shortcuts/save.shortcut)
 
 1. 运行 `照片元数据网页入口`，选择照片。
 2. 网页打开后点 `读快捷指令`。
